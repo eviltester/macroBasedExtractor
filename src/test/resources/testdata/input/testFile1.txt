@@ -1,0 +1,172 @@
+package com.compendiumdev.sourceextractor;
+
+import java.util.List;
+
+public class SourceMacro {
+    private int foundOnLineNumber;
+    private String macroText;
+    private boolean parsed=false;
+    private String macroCommandText;
+    String macroParams[];
+
+    //!---=start(constructorAndMacroCodeMethod)=---!
+    public SourceMacro(String foundMacro, int lineCount) {
+        //!---=getNextLines(4, sourceMacroConstructorBody)=---!
+        this.macroText = foundMacro;
+        this.foundOnLineNumber = lineCount;
+        this.parsed=false;
+        this.macroCommandText="";
+    }
+
+    //!---=start(macroCodeMethod)=---!
+    public String macroCode(){
+        return this.macroText;
+    }
+    //!---=end(macroCodeMethod)=---!
+    //!---=end(constructorAndMacroCodeMethod)=---!
+
+    public int foundOnLine() {
+        return foundOnLineNumber;
+    }
+
+    /**
+     * given a list of ParsedLine(s) we should run the macro against that list
+     * and return the result
+     * @param parsedLines
+     * @return String
+     */
+    public String executeAgainst(List<ParsedLine> parsedLines) {
+
+        String result="";
+
+        parse();
+
+        switch(this.getCommand().toLowerCase()){
+            case "getnextlines":
+                result = getNextLines(parsedLines);
+                break;
+            case "start":
+                result = getStartEnd(parsedLines);
+                break;
+            case "end":
+                // we don't process an end macro, skip it
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown Macro '" + this.getCommand() + "' on line '" + this.foundOnLineNumber + "'");
+        }
+
+        return result;
+    }
+
+    private String getStartEnd(List<ParsedLine> parsedLines) {
+        String result = "";
+        int lineCount=0;
+
+        for(ParsedLine currentLine : parsedLines){
+            // only process lines after the macro itself
+            if(lineCount>=foundOnLineNumber){
+
+                if(currentLine.isMacro()){
+                    if(currentLine.asMacro().getCommand().equalsIgnoreCase("end")){
+                        // if end for same argument as macro we are processing
+                        if(currentLine.asMacro().getParams()[0].contentEquals(this.getParams()[0])){
+                           break;
+                        }
+                    }
+                }
+
+                if(currentLine.isMacro()){
+                    // ignore nested macro lines
+                }else{
+                    result += parsedLines.get(lineCount).getLineText() + parsedLines.get(lineCount).getLineEnding();
+                }
+            }
+            lineCount++;
+        }
+        return result;
+    }
+
+    private String getNextLines(List<ParsedLine> parsedLines) {
+        String result = "";
+        int numberOfLines = Integer.valueOf(macroParams[0]);
+        for(int lineCount=0; lineCount<parsedLines.size(); lineCount++){
+
+            // only process lines after the macro itself
+            ParsedLine currentLine = parsedLines.get(lineCount);
+            if(lineCount>=foundOnLineNumber){ // && lineCount<=(foundOnLineNumber+numberOfLines))
+
+                if(numberOfLines > 0){
+                    if(currentLine.isMacro()){
+                        // ignore nested macros although they are included in the line count
+                    }else{
+                        result += currentLine.getLineText() + currentLine.getLineEnding();
+                    }
+                }
+                numberOfLines--;
+            }
+        }
+        return result;
+    }
+
+
+
+    public String [] getParams(){
+        if(!parsed)
+            parse();
+
+        return macroParams;
+    }
+    /** return the text of the command without any params or args */
+    public String getCommand() {
+        if(!parsed)
+            parse();
+
+        return macroCommandText;  //To change body of created methods use File | Settings | File Templates.
+    }
+
+    /** Crude, just get it done parser to handle macroName(arg1,arg2) */
+    public void parse(){
+        String parts[];
+
+        if(!parsed){
+            parts = this.macroText.split("\\(");
+            this.macroCommandText = parts[0].trim();
+
+            int closingBracePosition = parts[1].lastIndexOf(")");
+            String theParams = parts[1].substring(0,closingBracePosition).trim();
+
+            if(parts[1].contains(",")){
+                macroParams = theParams.split(",");
+                int paramIndex=0;
+                for(String aParam : macroParams){
+                    macroParams[paramIndex] = aParam.trim();
+                    paramIndex++;
+                }
+            }else{
+                // no param separator, must be a single param
+                macroParams= new String [1];
+                macroParams[0] = theParams;
+            }
+        }
+        parsed=true;
+    }
+
+    public String getOutputName() {
+        if(!parsed)
+            parse();
+
+        switch(this.getCommand().toLowerCase()){
+            case "getnextlines":
+                return this.getParams()[1];
+
+            case "start":
+                return this.getParams()[0];
+
+            case "end":
+                return this.getParams()[0];
+
+            default:
+                throw new IllegalArgumentException("Unknown Macro '" + this.getCommand() + "' on line '" + this.foundOnLineNumber + "'");
+        }
+    }
+}

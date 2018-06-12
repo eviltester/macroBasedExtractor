@@ -1,0 +1,9 @@
+This is an extra import file
+
+Which would only be picked up if the regex included .dat files
+
+//!---=start(textFromDatFile)=---!
+Here is some text from the dat file
+//!---=end(textFromDatFile)=---!
+
+This might be an additional file

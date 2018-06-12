@@ -1,0 +1,56 @@
+package com.compendiumdev.sourceextractor;
+
+import java.util.List;
+
+public class SourceMacro {
+    private int foundOnLineNumber;
+    private String macroText;
+    private boolean parsed=false;
+    private String macroCommandText;
+    String macroParams[];
+
+
+    public SourceMacro(String foundMacro, int lineCount) {
+        //!---=getNextLines(4, sourceMacroConstructorBody)=---!
+        this.macroText = foundMacro;
+        this.foundOnLineNumber = lineCount;
+        this.parsed=false;
+        this.macroCommandText="";
+    }
+
+    public String macroCode(){
+        return this.macroText;
+    }
+
+    public int foundOnLine() {
+        return foundOnLineNumber;
+    }
+
+    /**
+     * given a list of ParsedLine(s) we should run the macro against that list
+     * and return the result
+     * @param parsedLines
+     * @return String
+     */
+    public String executeAgainst(List<ParsedLine> parsedLines) {
+
+        String result="";
+
+        parse();
+
+        switch(this.getCommand().toLowerCase()){
+            case "getnextlines":
+                result = getNextLines(parsedLines);
+                break;
+            case "start":
+                result = getStartEnd(parsedLines);
+                break;
+            case "end":
+                // we don't process an end macro, skip it
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown Macro '" + this.getCommand() + "' on line '" + this.foundOnLineNumber + "'");
+        }
+
+        return result;
+    }

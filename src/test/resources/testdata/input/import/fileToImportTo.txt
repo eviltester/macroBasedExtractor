@@ -1,0 +1,16 @@
+This is a part of a file
+
+// !---=startImportHere(simpleImportFile.txt)=---!
+This is an import file
+
+* with a list
+* of things
+// !---=endImportHere(simpleImportFile.txt)=---!
+
+// !---=startImportHere(/subfolder/anotherImportFile.txt)=---!
+And this list:
+
+* and this item too
+// !---=endImportHere(/subfolder/anotherImportFile.txt)=---!
+
+This is the end of the file

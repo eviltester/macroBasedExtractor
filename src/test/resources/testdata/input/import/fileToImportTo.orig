@@ -1,0 +1,9 @@
+This is a part of a file
+
+// !---= importHere(simpleImportFile.txt) =---!
+
+// !---= startImportHere(/subfolder/anotherImportFile.txt) =---!
+This is old text that won't appear in the output
+// !---= endImportHere(/subfolder/anotherImportFile.txt) =---!
+
+This is the end of the file
